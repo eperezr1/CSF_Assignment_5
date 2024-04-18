@@ -312,7 +312,7 @@ void test_message_serialization_encode( TestObjs *objs )
 
   MessageSerialization::encode( objs->pop_req, s );
   ASSERT( "POP\n" == s );
-
+  
   MessageSerialization::encode( objs->set_req, s );
   ASSERT( "SET accounts acct123\n" == s );
 

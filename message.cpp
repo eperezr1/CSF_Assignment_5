@@ -44,31 +44,31 @@ void Message::set_message_type(MessageType message_type)
 std::string Message::get_username() const
 {
   // TODO: implement
-  return "";
+  return this->m_args[0];
 }
 
 std::string Message::get_table() const
 {
   // TODO: implement
-  return "";
+  return this->m_args[0];
 }
 
 std::string Message::get_key() const
 {
   // TODO: implement
-  return "";
+  return this->m_args[1];
 }
 
 std::string Message::get_value() const
 {
   // TODO: implement
-  return "";
+  return this->m_args[0];
 }
 
 std::string Message::get_quoted_text() const
 {
   // TODO: implement
-  return "";
+  return this->m_args[1]; // not sure this is correct, not tested
 }
 
 void Message::push_arg( const std::string &arg )
@@ -76,7 +76,7 @@ void Message::push_arg( const std::string &arg )
   m_args.push_back( arg );
 }
 
-bool Message::is_valid() const
+bool Message::is_valid() const //still need to do
 {
   // TODO: implement
   return true;
