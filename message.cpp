@@ -68,7 +68,7 @@ std::string Message::get_value() const
 std::string Message::get_quoted_text() const
 {
   // TODO: implement
-  return this->m_args[1]; // not sure this is correct, not tested
+  return this->m_args[0]; // not sure this is correct, not tested (need to remove quotes?)
 }
 
 void Message::push_arg( const std::string &arg )
@@ -76,8 +76,55 @@ void Message::push_arg( const std::string &arg )
   m_args.push_back( arg );
 }
 
-bool Message::is_valid() const //still need to do
+bool Message::is_valid() const //not sure if implemented well, unfinished, add check for quoted text and valid value, and check for total message length
 {
   // TODO: implement
+
+  //check that number of args is correct for command/message type?
+  if (m_message_type == MessageType::LOGIN || m_message_type == MessageType::CREATE ) {
+    //check that arg is valid identifier (helper function?)
+    if (m_args.size() != 1 || !(this->is_valid_identifier())) {
+      return false;
+    }
+  } else if (m_message_type == MessageType::DATA || m_message_type == MessageType::PUSH) {
+    //check that value is sequence of 1 or more non-whitespace chars
+    if (m_args.size() != 1) {
+      return false;
+    }
+  } else if (m_message_type == MessageType::FAILED || m_message_type == MessageType::ERROR) {
+    //check that quoted_text arg begins ", is followed by zero or more non-" characters, and ends with a "
+    if (m_args.size() != 1) {
+      return false;
+    }
+  } else if (m_message_type == MessageType::SET || m_message_type == MessageType::GET) {
+    //check that num args is two, and table and key are valid identifiers
+    if (m_args.size() != 2 || !(this->is_valid_identifier())) {
+      return false;
+    }
+  }
+  
+  
+  //check total length of message <= Message:MAX_ENCODED_LEN?
+
   return true;
+}
+
+bool Message::is_valid_identifier() const {
+  for (std::string arg : m_args) { // check that identifiers begin with letter and the rest is letters, underscores, or digits
+      if (!((arg[0] >= 'A' && arg[0] <= 'Z') || (arg[0] >= 'a' && arg[0] <= 'z'))) {
+        return false;
+      }
+      //loop through chars (if made it here we know first char was letter)
+      for (char c : arg) {
+        if (!((c>= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_')) {
+          return false;
+        }
+      }
+
+  }
+  return true;
+}
+
+void Message::empty_args() {
+  this->m_args.clear();
 }

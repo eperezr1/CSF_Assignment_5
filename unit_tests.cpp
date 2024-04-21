@@ -6,6 +6,7 @@
 #include "value_stack.h"
 #include "exceptions.h"
 #include "tctest.h"
+#include <cstdio>
 
 struct TestObjs
 {

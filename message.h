@@ -62,6 +62,14 @@ public:
 
   unsigned get_num_args() const { return m_args.size(); }
   std::string get_arg( unsigned i ) const { return m_args.at( i ); }
+
+
+  //helper functions
+  bool is_valid_identifier() const;
+
+  void empty_args();
 };
 
+
+  
 #endif // MESSAGE_H
