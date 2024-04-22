@@ -6,6 +6,7 @@
 #include "value_stack.h"
 #include "exceptions.h"
 #include "tctest.h"
+#include <iostream>
 #include <cstdio>
 
 struct TestObjs
@@ -403,7 +404,7 @@ void test_table_has_key( TestObjs *objs )
 {
   {
     TableGuard g( objs->invoices ); // ensure table is locked and unlocked
-
+    
     objs->invoices->set( "abc123", "1000" );
     objs->invoices->set( "xyz456", "1318" );
   }

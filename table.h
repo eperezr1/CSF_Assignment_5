@@ -9,6 +9,9 @@ class Table {
 private:
   std::string m_name;
   // TODO: add member variables
+  std::map<std::string, std::string> table; // stores all committed and uncommitted data
+  std::map<std::string, std::string> uncommitted_map; // stores uncommitted key-values
+  pthread_mutex_t mutex;
 
   // copy constructor and assignment operator are prohibited
   Table( const Table & );
