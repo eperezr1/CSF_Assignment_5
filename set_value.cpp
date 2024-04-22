@@ -1,3 +1,4 @@
+#include "csapp.h"
 #include <iostream>
 
 int main(int argc, char **argv)
@@ -15,4 +16,15 @@ int main(int argc, char **argv)
   std::string value = argv[6];
 
   // TODO: implement
+
+  const char *hostname_charstr = hostname.c_str();
+  const char *port_charstr = port.c_str();
+  int fd = open_clientfd(hostname_charstr, port_charstr);
+  if (fd < 0) {
+    // std::cerr << "Error:{quoted text}\n"; // add quoted text from FAILED or
+    // ERROR response
+    return 1;
+  }
+
+
 }

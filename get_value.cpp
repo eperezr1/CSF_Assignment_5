@@ -1,6 +1,6 @@
 #include <iostream>
 
-int main(int argc, char **argv)
+int main(int argc, char **argv) 
 {
   if ( argc != 6 ) {
     std::cerr << "Usage: ./get_value <hostname> <port> <username> <table> <key>\n";
