@@ -11,7 +11,7 @@ void handleResponse(int fd, rio_t* rio,std::string& response_type, const std::st
         exit(1);
     }
     buf[n] = '\0';
-    response_type = buf;
+    response_type = std::string(buf);
     if (response_type.find("ERROR") != std::string::npos || response_type.find("FAILED") != std::string::npos) {
         std::cerr << "Error: "
                   << response_type.substr(response_type.find('"') + 1,
@@ -56,18 +56,6 @@ int main(int argc, char **argv) {
 
   rio_t rio;
   rio_readinitb(&rio, fd);
-  char buf[1024];
-  ssize_t n;
-
-  if (use_transaction) {
-    // BEGIN
-    rio_writen(fd, "BEGIN\n", 6);
-    // read response from server
-
-    n = rio_readlineb(&rio, buf, sizeof(buf));
-    std::string response(buf);
-    handleResponse(fd, &rio, response, "Failed to receive BEGIN response from server");
-  }
 
   // send messages to server
   //  LOGIN
@@ -77,6 +65,13 @@ int main(int argc, char **argv) {
   std::string response_login;
   handleResponse(fd, &rio, response_login, "Failed to receive LOGIN response from server");
 
+  if (use_transaction) {
+    // BEGIN
+    rio_writen(fd, "BEGIN\n", 6);
+    // read response from server
+    std::string response;
+    handleResponse(fd, &rio, response, "Failed to receive BEGIN response from server");
+  }
 
   // GET
   rio_writen(fd, ("GET " + table + " " + key + "\n").c_str(),
@@ -112,26 +107,19 @@ int main(int argc, char **argv) {
   std::string response_set;
   handleResponse(fd, &rio, response_set, "Failed to receive SET response from server");
 
+  if (use_transaction) {
+    //COMMIT
+    rio_writen(fd, "COMMIT\n", 7);
+    // read response from server
+    std::string response_commit;
+    handleResponse(fd, &rio, response_commit, "Failed to receive COMMIT response from server");
+  }
 
   // BYE
   rio_writen(fd, "BYE\n", 4);
   // read response from server
   std::string response_bye;
   handleResponse(fd, &rio, response_bye, "Failed to receive BYE response from server");
-
-
-  if (use_transaction) {
-    //COMMIT
-    rio_writen(fd, "COMMIT\n", 7);
-    // read response from server
-
-    n = rio_readlineb(&rio, buf, sizeof(buf));
-    if (n <= 0) {
-      std::cerr << "Error: Failed to receive response from server\n";
-      close(fd);
-      return 1;
-    }
-  }
 
   // close connection
   close(fd);

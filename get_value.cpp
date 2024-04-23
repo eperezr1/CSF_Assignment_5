@@ -2,6 +2,26 @@
 #include <sstream>
 #include "csapp.h"
 
+void handleResponse(int fd, rio_t* rio,std::string& response_type, const std::string& errorMessage) {
+  char buf[1024];
+    ssize_t n = rio_readlineb(rio, buf, sizeof(buf));
+    if (n <= 0) {
+        std::cerr << "Error: " << errorMessage << std::endl;
+        close(fd);
+        exit(1);
+    }
+    buf[n] = '\0';
+    response_type = std::string(buf);
+    if (response_type.find("ERROR") != std::string::npos || response_type.find("FAILED") != std::string::npos) {
+        std::cerr << "Error: "
+                  << response_type.substr(response_type.find('"') + 1,
+                                     response_type.find_last_of('"') - response_type.find('"') - 1)
+                  << "\n";
+        close(fd);
+        exit(1);
+    }
+}
+
 int main(int argc, char **argv) 
 {
   if ( argc != 6 ) {
@@ -24,79 +44,33 @@ int main(int argc, char **argv)
 
   rio_t rio;
   rio_readinitb(&rio, clientfd);
-  char buffer[1024];
-  ssize_t bytes_read;
 
   // send LOGIN request and read response
   std::string login_req = "LOGIN " + username + "\n";
   rio_writen(clientfd, login_req.c_str(), login_req.length());
-  if ((bytes_read = rio_readlineb(&rio, buffer, sizeof(buffer))) <= 0) {
-    std::cerr << "Error: failed to receive response from server\n";
-    close(clientfd);
-    return 1;
-  }
-  buffer[bytes_read] = '\0';
-  std::string login_response(buffer);
-  // check LOGIN response
-  if (login_response.find("ERROR") != std::string::npos || login_response.find("FAILED") != std::string::npos) {
-    std::size_t pos = login_response.find('"');
-    std::size_t end_pos = login_response.find('"', pos + 1);
-    // print the quoted text from ERROR or FAILED response
-    std::cerr << "Error: " << login_response.substr(pos + 1, end_pos - pos - 1) << "\n";
-    close(clientfd);
-    return 1;
-  }
+  std::string login_response;
+  handleResponse(clientfd, &rio, login_response, "Failed to receive LOGIN response from server");
 
   // send GET request and read response
   std::string get_req = "GET " + table + " " + key + "\n";
   rio_writen(clientfd, get_req.c_str(), get_req.length());
-  if ((bytes_read = rio_readlineb(&rio, buffer, sizeof(buffer))) <= 0) {
-    std::cerr << "Error: failed to receive response from server\n";
-    close(clientfd);
-    return 1;
-  }
-  buffer[bytes_read] = '\0';
-  std::string get_response(buffer);
-  // check GET response
-  if (get_response.find("ERROR") != std::string::npos || get_response.find("FAILED") != std::string::npos) {
-    std::size_t pos = get_response.find('"');
-    std::size_t end_pos = get_response.find('"', pos + 1);
-    // print the quoted text from ERROR or FAILED response
-    std::cerr << "Error: " << get_response.substr(pos + 1, end_pos - pos - 1) << "\n";
-    close(clientfd);
-    return 1;
-  }
+  std::string get_response;
+  handleResponse(clientfd, &rio, get_response, "Failed to receive GET response from server");
+
 
   // send TOP request and read response
   std::string top_req = "TOP\n";
   rio_writen(clientfd, top_req.c_str(), top_req.length());
-  if ((bytes_read = rio_readlineb(&rio, buffer, sizeof(buffer))) <= 0) {
-    std::cerr << "Error: failed to receive response from server\n";
-    close(clientfd);
-    return 1;
-  }
-  buffer[bytes_read] = '\0';
-  std::string top_response(buffer);
-  // check TOP response
-  if (top_response.find("ERROR") != std::string::npos || top_response.find("FAILED") != std::string::npos) {
-    std::size_t pos = top_response.find('"');
-    std::size_t end_pos = top_response.find('"', pos + 1);
-    // print the quoted text from ERROR or FAILED response
-    std::cerr << "Error: " << top_response.substr(pos + 1, end_pos - pos - 1) << "\n";
-    close(clientfd);
-    return 1;
-  }
+  std::string top_response;
+  handleResponse(clientfd, &rio, top_response, "Failed to receive TOP response from server");
   // print out requested value
   std::cout << top_response.substr(5);
 
-  // send BYE
+  // send BYE request and read response
   std::string bye_req = "BYE\n";
   rio_writen(clientfd, bye_req.c_str(), bye_req.length());
-  if ((bytes_read = rio_readlineb(&rio, buffer, sizeof(buffer))) <= 0) {
-    std::cerr << "Error: failed to receive response from server\n";
-    close(clientfd);
-    return 1;
-  }
+  std::string bye_response;
+  handleResponse(clientfd, &rio, bye_response, "Failed to receive BYE response from server");
 
   close(clientfd); // close connection
   
