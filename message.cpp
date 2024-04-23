@@ -68,7 +68,7 @@ std::string Message::get_value() const
 std::string Message::get_quoted_text() const
 {
   // TODO: implement
-  return this->m_args[0]; // not sure this is correct, not tested (need to remove quotes?)
+  return this->m_args[0];
 }
 
 void Message::push_arg( const std::string &arg )
@@ -76,24 +76,23 @@ void Message::push_arg( const std::string &arg )
   m_args.push_back( arg );
 }
 
-bool Message::is_valid() const //not sure if implemented well, unfinished, add check for quoted text and valid value, and check for total message length
+bool Message::is_valid() const 
 {
   // TODO: implement
-
-  //check that number of args is correct for command/message type?
+  //check that number of args is correct for command/message type
   if (m_message_type == MessageType::LOGIN || m_message_type == MessageType::CREATE ) {
-    //check that arg is valid identifier (helper function?)
+    //check that arg is valid identifier
     if (m_args.size() != 1 || !(this->is_valid_identifier())) {
       return false;
     }
   } else if (m_message_type == MessageType::DATA || m_message_type == MessageType::PUSH) {
     //check that value is sequence of 1 or more non-whitespace chars
-    if (m_args.size() != 1) {
+    if (m_args.size() != 1 || !(is_valid_value())) {
       return false;
     }
   } else if (m_message_type == MessageType::FAILED || m_message_type == MessageType::ERROR) {
     //check that quoted_text arg begins ", is followed by zero or more non-" characters, and ends with a "
-    if (m_args.size() != 1) {
+    if (m_args.size() != 1 || !(this->is_valid_quoted_text())) {
       return false;
     }
   } else if (m_message_type == MessageType::SET || m_message_type == MessageType::GET) {
@@ -102,9 +101,6 @@ bool Message::is_valid() const //not sure if implemented well, unfinished, add c
       return false;
     }
   }
-  
-  
-  //check total length of message <= Message:MAX_ENCODED_LEN?
 
   return true;
 }
@@ -127,4 +123,25 @@ bool Message::is_valid_identifier() const {
 
 void Message::empty_args() {
   this->m_args.clear();
+}
+
+bool Message::is_valid_quoted_text() const {
+  std::string quoted_text = m_args[0];
+
+  for (size_t i = 1; i < quoted_text.length() - 1; i++) {
+    if (quoted_text[i] == '\"') {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool Message::is_valid_value() const {
+  std::string value = m_args[0];
+  for (size_t i = 0; i < value.length(); i++) {
+    if (value[i] == ' ') {
+      return false;
+    }
+  }
+  return true;
 }

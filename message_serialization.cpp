@@ -10,11 +10,8 @@
 void MessageSerialization::encode( const Message &msg, std::string &encoded_msg )
 {
   // TODO: implement
-  //not sure I did this correctly...
-
-
    std::stringstream ss; // stores encoded messasge
-    std::map<MessageType, std::string> message_type_strings = { //not sure how to convert to string in better way
+    std::map<MessageType, std::string> message_type_strings = { //map MessageType to string
         {MessageType::NONE, "NONE"},
         {MessageType::LOGIN, "LOGIN"},
         {MessageType::CREATE, "CREATE"},
@@ -68,7 +65,7 @@ void MessageSerialization::decode( const std::string &encoded_msg_, Message &msg
   if (encoded_msg_.length() > Message::MAX_ENCODED_LEN) {
       throw InvalidMessage("message is too long");
   }
-  if (encoded_msg_[encoded_msg_.length() - 1] != '\n') { //should this be in is_valid() function?
+  if (encoded_msg_[encoded_msg_.length() - 1] != '\n') { 
       throw InvalidMessage("message does not end in newline character");
   }
 
@@ -111,7 +108,7 @@ void MessageSerialization::decode( const std::string &encoded_msg_, Message &msg
             msg.push_arg(word); // Include the quotes in the argument
    }
   } else {
-    while (ss >> word) {
+    while (ss >> word) { //add args to msg
       msg.push_arg(word);
     }
   }
@@ -120,8 +117,6 @@ void MessageSerialization::decode( const std::string &encoded_msg_, Message &msg
     throw InvalidMessage("message is invalid");
   }
 
-
-  
   
 }
 

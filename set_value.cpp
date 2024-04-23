@@ -49,7 +49,6 @@ int main(int argc, char **argv) {
   // send messages to server
   //  LOGIN
 
-  // check response from server?
   rio_t rio;
   rio_readinitb(&rio, fd);
  
@@ -67,13 +66,13 @@ int main(int argc, char **argv) {
   // SET
   rio_writen(fd, ("SET " + table + " " + key + "\n").c_str(),
              table.length() + key.length() + 6);
-  // check response from server
+  // check response from server after SET
   std::string response_set;
   handleResponse(fd, &rio, response_set, "Failed to receive SET response from server");
   
   // BYE
   rio_writen(fd, "BYE\n", 4);
-  // read response from server
+  // read response from server after BYE
   std::string response_bye;
   handleResponse(fd, &rio, response_bye, "Failed to receive BYE response from server");
 

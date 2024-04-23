@@ -68,6 +68,11 @@ public:
   bool is_valid_identifier() const;
 
   void empty_args();
+
+  bool is_valid_quoted_text() const;
+
+  bool is_valid_value() const;
+  
 };
 
 
