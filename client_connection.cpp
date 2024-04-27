@@ -22,8 +22,6 @@ ClientConnection::~ClientConnection()
 void ClientConnection::chat_with_client()
 {
   // TODO: implement
-  //start/end transactions (create a state variable for whether its in transaction mode or not), when COMMIT received, go back to autocommit mode
-  //read messages from client, parse, execute instructions (read, write to tables, handle exceptions)
 }
 
 // TODO: additional member functions
