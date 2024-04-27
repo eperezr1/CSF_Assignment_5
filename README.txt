@@ -12,4 +12,4 @@ and debug incr_value.
 Synchronization Report
 
 - data structure for collection of Table objects needed to be synchronized becuase multiple client threads
-will use this collection
+will use this collection ( need to synchronize actual Table objects themselves too (for accessing and modifying data in table)?)

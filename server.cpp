@@ -9,7 +9,7 @@
 Server::Server() 
   // TODO: initialize member variables
   : serverfd(-1), // initialize here so that server_loop has access to it
-  //collection of Table objects
+  //collection of Table objects (mapping table name to Table object)
   m_tables()
 {
   // TODO: implement
@@ -24,7 +24,10 @@ Server::~Server()
   }
 
   //delete created Tables?
-  m_tables.clear();
+  for (auto& pair: m_tables) {
+    delete pair.second; //delete actual Table object in memory
+  }
+  m_tables.clear(); //delete map (needed?)
 }
 
 void Server::listen( const std::string &port )
@@ -34,6 +37,7 @@ void Server::listen( const std::string &port )
   serverfd = open_listenfd(port_str);
   if (serverfd < 0) {
     log_error("Couldn't open server socket"); // or fatal?
+    //exit?
   }
 }
 
@@ -66,7 +70,10 @@ void *Server::client_worker( void *arg ) //calls ClientConnection object's chat_
   // called chat_with_client(), your implementation might look something
   // like this:
   std::unique_ptr<ClientConnection> client( static_cast<ClientConnection *>( arg ) );
-  client->chat_with_client();
+  client->chat_with_client(); // clients start out in autocommit mode
+
+  //maybe need getter function in client_connection to close clientfd after done with client thread??
+  //close(client->get_m_client_fd()); //close client file descriptor after client_thread finishes
   return nullptr;
 }
 
@@ -81,7 +88,7 @@ void Server::log_error( const std::string &what )
 void Server::create_table( const std::string &name ) { 
   //TODO:
   m_tables[name] = new Table(name); // create new table with string name and add to map
-  //tables start out as unlocked
+  //tables must start out as unlocked
 }
 
 // get table object with matching name from m_tables map 
