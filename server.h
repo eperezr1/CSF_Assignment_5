@@ -6,6 +6,7 @@
 #include <pthread.h>
 #include "table.h"
 #include "client_connection.h"
+#include "value_stack.h"
 
 class Server {
 private:
@@ -14,6 +15,7 @@ private:
   //collection of table objects (needs to be synchronized) created in repsonse to CREATE messages
   std::map<std::string, Table *> m_tables; // table name (string) to table object
 
+  std::map<int, ValueStack *> m_value_stacks; //map client file descriptors to their own value stack
   // copy constructor and assignment operator are prohibited
   Server( const Server & );
   Server &operator=( const Server & );
