@@ -37,8 +37,7 @@ void ClientConnection::chat_with_client()
       Message request;
       MessageSerialization::decode(line, request);
 
-      // handle request here? 
-      handle_request(request); // maybe have handle_request return a Msg type?
+      Message response = handle_request(request); // return Message type
 
       std::string response_str;
       MessageSerialization::encode(response, response_str);
@@ -48,15 +47,31 @@ void ClientConnection::chat_with_client()
       }
 
     } catch (const CommException& e) {
-      // close client?
+      // session must end
+      Message response = Message(MessageType::ERROR, {e.what()});
+      std::string response_str;
+      MessageSerialization::encode(response, response_str);
+      ssize_t written = rio_writen(m_client_fd, response_str.c_str(), response_str.length());
+      close(m_client_fd); // close client
+      break; //?
+      
     } catch (const InvalidMessage& e) {
-      // close client
-      MessageType ERROR; // session must end
-      Message(ERROR, {e.what()});
+      // session must end
+      Message response = Message(MessageType::ERROR, {e.what()});
+      std::string response_str;
+      MessageSerialization::encode(response, response_str);
+      ssize_t written = rio_writen(m_client_fd, response_str.c_str(), response_str.length());
+      close(m_client_fd); // close client
+      break; //?
+
     } catch (const OperationException& e) {
-      // handle operation exception
-      MessageType FAILED; // session can continue
-      Message(FAILED, {e.what()});
+      // session can continue
+      Message response = Message(MessageType::FAILED, {e.what()});
+      std::string response_str;
+      MessageSerialization::encode(response, response_str);
+      ssize_t written = rio_writen(m_client_fd, response_str.c_str(), response_str.length());
+      break; //?
+
     } catch (const FailedTransaction& e) {
       // handle failed transaction
       // rollback changes here?
@@ -65,101 +80,102 @@ void ClientConnection::chat_with_client()
 }
 
 // TODO: additional member functions
-void ClientConnection::handle_request(const Message& request) { //edit return type to be Message response
-  try { // not sure if we need this try catch
-    switch (request.get_message_type()) {
-      case MessageType::LOGIN:
-        handle_login(request);
-        break;
-      case MessageType::CREATE:
-        handle_create(request);
-        break;
-      case MessageType::PUSH:
-        handle_push(request);
-        break;
-      case MessageType::POP:
-        handle_pop(request);
-        break;  
-      case MessageType::TOP:
-        handle_top(request);
-        break;
-      case MessageType::SET:
-        handle_set(request);
-        break;
-      case MessageType::GET:
-        handle_get(request);
-        break;
-      case MessageType::ADD:
-        handle_add(request);
-        break;
-      case MessageType::MUL:
-        handle_mul(request);
-        break;
-      case MessageType::SUB:
-        handle_sub(request);
-        break;
-      case MessageType::DIV:
-        handle_div(request);
-        break;
-      case MessageType::BEGIN:
-        handle_begin(request);
-        break;
-      case MessageType::COMMIT:
-        handle_commit(request);
-        break;
-      case MessageType::BYE:
-        handle_bye(request);
-        break;
-    }
-  } catch (const OperationException& e) {
-    // send FAILED msg type?
-  } catch (const FailedTransaction& e) {
-    // handle failed transaction
+Message ClientConnection::handle_request(const Message& request) { //edit return type to be Message response
+  switch (request.get_message_type()) {
+    case MessageType::LOGIN:
+      handle_login(request);
+      break;
+    case MessageType::CREATE:
+      handle_create(request);
+      break;
+    case MessageType::PUSH:
+      handle_push(request);
+      break;
+    case MessageType::POP:
+      handle_pop(request);
+      break;  
+    case MessageType::TOP:
+      handle_top(request);
+      break;
+    case MessageType::SET:
+      handle_set(request);
+      break;
+    case MessageType::GET:
+      handle_get(request);
+      break;
+    case MessageType::ADD:
+      handle_add(request);
+      break;
+    case MessageType::MUL:
+      handle_mul(request);
+      break;
+    case MessageType::SUB:
+      handle_sub(request);
+      break;
+    case MessageType::DIV:
+      handle_div(request);
+      break;
+    case MessageType::BEGIN:
+      handle_begin(request);
+      break;
+    case MessageType::COMMIT:
+      handle_commit(request);
+      break;
+    case MessageType::BYE:
+      handle_bye(request);
+      break;
   }
   //return response?
 }
 
-void ClientConnection::handle_login(const Message& request) {
+Message ClientConnection::handle_login(const Message& request) {
   //client logs in (can only be first message)
-
+    Message response;
     if (!logged_in) {
       std::string username = request.get_username();
       //set response as OK
-      Message response = new Message(OK);
       logged_in = true;
+      return Message(MessageType::OK);
     } else {
       throw InvalidMessage("Error LOGIN may only be the first message"); //send this message to client
     }
-  } catch(InvalidMessage& err){ //already sent LOGIN message, can't send again
-    Message response = new Message(Error, {err.what()}); //unrecoverable error, end conversation with client
-    close(m_client_fd);
+    //in case of error, formulate response in chat_with_client
   }
-}
 
-void ClientConnection::handle_create( const Message& request ) {
+
+Message ClientConnection::handle_create( const Message& request ) {
   std::string table_name = request.get_table();
   if (m_server->find_table(table_name) != nullptr) { // table found
-    // do we throw operation exception here
+    throw OperationException("Table already exists"); // FAILED "Table table_name already exists" according to ref server
   }
   m_server->create_table(table_name);
+  Message response = Message(MessageType::OK);
+  return response;
 }
 
-void ClientConnection::handle_push(const Message& request) {
+Message ClientConnection::handle_push(const Message& request) {
   // push a value onto the stack
   std::string value = request.get_value();
   m_stack->push(value);
+  Message response = Message(MessageType::OK);
+  return response;
 }
 
-void ClientConnection::handle_pop( const Message& request ) {
+Message ClientConnection::handle_pop( const Message& request ) {
   // pop (discard) the top value from the operand stack
   m_stack->pop();
+  Message response = Message(MessageType::OK);
+  return response;
 }
 
-void ClientConnection::handle_top(const Message& request) {
+Message ClientConnection::handle_top(const Message& request) {
   // retrieve the top value from the operand stack
-  m_stack->get_top();
+  std::string value = m_stack->get_top();
+  Message response = Message(MessageType::DATA, {value});
+  return response;
 }
-void ClientConnection::handle_set( const Message& request ) {
+
+Message ClientConnection::handle_set( const Message& request ) {
   // set value of tuple named by key in table to the value
   // popped from the operand stack
   Table* table = m_server->find_table(request.get_table());
@@ -171,9 +187,11 @@ void ClientConnection::handle_set( const Message& request ) {
   std::string value = m_stack->get_top();
   m_stack->pop();
   table->set(key, value);
+  Message response = Message(MessageType::OK);
+  return response;
 }
 
-void ClientConnection::handle_get(const Message& request) {
+Message ClientConnection::handle_get(const Message& request) {
   // push value of tuple named by key in table onto operand stack
   Table* table = m_server->find_table(request.get_table());
   if (!table) {
@@ -181,9 +199,11 @@ void ClientConnection::handle_get(const Message& request) {
   }
   std::string value = table->get(request.get_key());
   m_stack->push(value);
+  Message response = Message(MessageType::OK);
+  return response;
 }
 
-void ClientConnection::handle_add( const Message& request ) {
+Message ClientConnection::handle_add( const Message& request ) {
   // pop two integers from operand stack, add, push sum
   std::string str_value1 = m_stack->get_top();
   m_stack->pop();
@@ -200,9 +220,11 @@ void ClientConnection::handle_add( const Message& request ) {
 
   int sum = int_value1 + int_value2;
   m_stack->push(std::to_string(sum)); // convert sum to str and push
-  
+  Message response = Message(MessageType::OK);
+  return response;
 }
-void ClientConnection::handle_mul(const Message& request) {
+
+Message ClientConnection::handle_mul(const Message& request) {
   // pop two integers from operand stack, multiply, push product
   std::string str_value1 = m_stack->get_top();
   m_stack->pop();
@@ -219,8 +241,11 @@ void ClientConnection::handle_mul(const Message& request) {
 
   int product = int_value1 * int_value2;
   m_stack->push(std::to_string(product)); // convert product to str and push
+  Message response = Message(MessageType::OK);
+  return response;
 }
-void ClientConnection::handle_sub( const Message& request ) {
+
+Message ClientConnection::handle_sub( const Message& request ) {
   // pop right and left integers from operand stack,
   // subtrack right from left, push difference
   std::string str_value1 = m_stack->get_top();
@@ -238,8 +263,11 @@ void ClientConnection::handle_sub( const Message& request ) {
 
   int diff = int_value2 - int_value1; // ORDER correct?
   m_stack->push(std::to_string(diff)); // convert diff to str and push
+  Message response = Message(MessageType::OK);
+  return response;
 }
-void ClientConnection::handle_div(const Message& message) {
+
+Message ClientConnection::handle_div(const Message& message) {
   // pop right and left integers from opand stack,
   // divide left by right, push quotient
   std::string str_value1 = m_stack->get_top();
@@ -257,20 +285,33 @@ void ClientConnection::handle_div(const Message& message) {
 
   int quot = int_value2 / int_value1; // ORDER correct?
   m_stack->push(std::to_string(quot)); // convert quot to str and push
+  Message response = Message(MessageType::OK);
+  return response;
 }
 
-void ClientConnection::handle_begin( const Message& request ) {
+Message ClientConnection::handle_begin( const Message& request ) {
   //if begin received, switch from autocommit to transaction (use a flag to keep track of state?)
+  //if already in transaction, FAILED "Nested transactions aren't supported"
+
+  //return OK
+  Message response = Message(MessageType::OK);
+  return response;
 }
 
-void ClientConnection::handle_commit(const Message& request) {
+Message ClientConnection::handle_commit(const Message& request) {
   //commit transaction, if responds with OK then proposed changes to table can be committed
+  //can't commit without begin in a transaction
+  //determine whether transaction passed or failed
+  // if passsed, send OK
+  // if failed, send FAILED
   //switch back to autocommit 
 }
 
-void ClientConnection::handle_bye( const Message& request ) {
+Message ClientConnection::handle_bye( const Message& request ) {
   //log out client
   //returns OK response?
+  Message response = Message(MessageType::OK);
+  return response;
   close(m_client_fd); //close client socket to terminate connection (so don't need to close in server??)
 }
   
