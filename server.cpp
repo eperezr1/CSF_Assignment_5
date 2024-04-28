@@ -34,6 +34,7 @@ Server::~Server()
   for (auto& pair : m_value_stacks) {
     delete pair.second;
   }
+  m_value_stacks.clear(); //delete map (needed?)
 }
 
 void Server::listen( const std::string &port )
@@ -60,7 +61,7 @@ void Server::server_loop()
     m_value_stacks[client_fd] = new ValueStack(); // create new value stack for client
     // Note that your code to start a worker thread for a newly-connected
     // client might look something like this:
-    ClientConnection *client = new ClientConnection( this, client_fd ); // create clientconnection object for new client
+    ClientConnection *client = new ClientConnection( this, client_fd, m_value_stacks[client_fd] ); // create clientconnection object for new client
     pthread_t thr_id;
     if (pthread_create( &thr_id, nullptr, client_worker, client ) != 0 ) //start thread for each client
       log_error( "Could not create client thread" );

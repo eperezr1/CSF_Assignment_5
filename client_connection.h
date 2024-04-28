@@ -13,13 +13,15 @@ private:
   Server *m_server;
   int m_client_fd;
   rio_t m_fdbuf;
+  ValueStack *m_stack; // reference to this client's stack
+  bool logged_in; //check if already logged in
 
   // copy constructor and assignment operator are prohibited
   ClientConnection( const ClientConnection & );
   ClientConnection &operator=( const ClientConnection & );
 
 public:
-  ClientConnection( Server *server, int client_fd );
+  ClientConnection( Server *server, int client_fd, ValueStack *stack );
   ~ClientConnection();
 
   void chat_with_client();
@@ -40,6 +42,7 @@ public:
   void handle_begin( const Message& request );
   void handle_commit(const Message& request);
   void handle_bye( const Message& request );
+  int get_m_client_fd();
 };
 
 #endif // CLIENT_CONNECTION_H
