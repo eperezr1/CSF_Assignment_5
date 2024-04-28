@@ -73,20 +73,12 @@ void *Server::client_worker( void *arg ) //calls ClientConnection object's chat_
 {
   // TODO: implement
   pthread_detach(pthread_self()); // detach client thread function before the rest of the code? 
-  // Assuming that your ClientConnection class has a member function
-  // called chat_with_client(), your implementation might look something
-  // like this:
+
   std::unique_ptr<ClientConnection> client( static_cast<ClientConnection *>( arg ) );
   client->chat_with_client(); // clients start out in autocommit mode
 
-  //UNCOMMENT CODE BELOW AFTER IMPLEMENTING CLIENTCONNECTION!!
-
-  //maybe need getter function in client_connection to close clientfd after done with client thread??
-  //close(client->get_m_client_fd()); //close client file descriptor after client_thread finishes
-
-  //delete client's value stack?
-  //m_value_stacks.erase(client->get_client_fd());
-  // need getter method in ClientConnection
+  close(client->get_m_client_fd()); //close client file descriptor after client_thread finishes
+ 
   return nullptr;
 }
 

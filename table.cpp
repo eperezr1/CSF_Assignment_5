@@ -62,7 +62,7 @@ bool Table::has_key( const std::string &key )
 void Table::commit_changes()
 {
   // TODO: implement
-  // empty uncommitted map since data is committed
+  // empty uncommitted map since data is now committed
   uncommitted_map.clear();
 }
 

@@ -4,6 +4,7 @@
 #include <set>
 #include "message.h"
 #include "csapp.h"
+#include "value_stack.h"
 
 class Server; // forward declaration
 class Table; // forward declaration
@@ -15,6 +16,9 @@ private:
   rio_t m_fdbuf;
   ValueStack *m_stack; // reference to this client's stack
   bool logged_in; //check if already logged in
+  bool in_transaction; // check if autocommit or transaction mode
+  std::set<Table *> modified_tables;
+  std::set<Table *> locked_tables;
 
   // copy constructor and assignment operator are prohibited
   ClientConnection( const ClientConnection & );

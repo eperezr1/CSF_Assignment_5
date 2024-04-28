@@ -28,6 +28,10 @@ Message::~Message()
 Message &Message::operator=( const Message &rhs )
 {
   // TODO: implement
+  if (this != &rhs) {
+    m_message_type = rhs.m_message_type;
+    m_args = rhs.m_args;
+  }
   return *this;
 }
 
